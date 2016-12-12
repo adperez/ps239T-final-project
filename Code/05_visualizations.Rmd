@@ -1,0 +1,287 @@
+---
+title: "05_visualizations"
+author: "Amanda D. Perez"
+date: "December 11, 2016"
+output: html_document
+---
+This script will produce all of the necessary graphs.
+First, I will install/load the necessary libraries.
+```{r eval=TRUE}
+libs_needed <- c("Hmisc","stats","ggplot2","grid","gridExtra","corrplot","wordcloud")
+install.packages(libs_needed)
+lapply(libs_needed, require, character.only = TRUE)
+```
+
+Next, I will set my working directory and load the necessary file.
+quant_data was created in the first(01_merge-data.Rmd) file.
+
+```{r eval=TRUE}
+setwd("~/Desktop/ps239t_final/Data")
+quant_data <- read.csv("Dataset_For_Quantitative_Analysis.csv")
+
+```
+
+Question 1) Does the amount of time (weekly) spent on the course impact exam scores?
+Graph for Q1:
+```{r eval=TRUE}
+p <- ggplot(quant_data, aes(Weekly_Hours, Final)) + geom_point(size=1,position="jitter")+
+  labs(title="Impact of Study Time on Exam Score") +
+  labs(x="Weekly Hours Spent on Course", y="Final Exam Score %")+geom_smooth(method = "lm", se = TRUE)
+grid.newpage()
+footnote <- "\n\nNote: Each dot represents one student.\n The Y axis represents the % score on the Final Exam.\nThe blue line represents a fitted regression line and Standard Error."
+g <- arrangeGrob(p, bottom = textGrob(footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontface = "italic", fontsize = 12)))
+grid.draw(g)
+#Slightly positive
+```
+
+Question 2) Do higher frequencies of doing happiness practices lead to higher exam scores?
+We will be looking at the 12 Happiness Practices taught throughout the course:
+Frequency_3_Good_Things, Frequency_Active_Listening, Frequency_Awe_Walk, Frequency_Body_Scan, Frequency_Forgiveness, Frequency_Gratitude_Journal,
+Frequency_Gratitude_Letter, Frequency_Ideal_Self, Frequency_Meditation, Frequency_Mindful_Breathing, Frequency_Random_Kindness, Frequency_Self_Compassion_Letter
+
+Q2 Graphs
+```{r eval=TRUE}
+p2 <- ggplot(quant_data, aes(Frequency_Mindful_Breathing, Final)) + geom_point(size=1,position="jitter")+
+  labs(title="Impact of Mindful Breathing on Exam Scores") +
+  labs(x="Frequency of Mindful Breathing throughout the course", y="Final Exam Score %")+geom_smooth(method = "lm", se = TRUE)
+grid.newpage()
+footnote2 <- "\n\nNote: Each dot represents one student.\n The Y axis represents the % score on the Final Exam.\nThe blue line represents a fitted regression line and Standard Error."
+g2 <- arrangeGrob(p2, bottom = textGrob(footnote2, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontface = "italic", fontsize = 12)))
+grid.draw(g2)
+#Slightly positive
+```
+
+Question 3) What are the correlations b/w specific measures?
+Specifically, we will look at Subjective happiness, sense of purpose, stress, and loneliness. 
+Q3 graph
+
+```{r eval=TRUE}
+measure.names <- c("LONELY" ,"SHS" ,"PURPOSE"  ,"STRESS") #names of variables I will subset
+my.cors <- quant_data[measure.names] #creating a matrix w/complete observations &naming my variables
+my.cors <- na.omit(my.cors)
+names(my.cors) <- c("LONELY","SHS","PURPOSE","STRESS")
+names(my.cors)
+my.cors <- as.matrix(my.cors)
+mcor <- cor(my.cors)
+col <- colorRampPalette(c("#BB4444","#EE9988","#FFFFFF", "#77AADD", "#4477AA"))
+corrplot(mcor, method="shade", shade.col=NA, tl.col="black", tl.srt=45,
+         col=col(200), addCoef.col="black", addcolorlabel="no", order="AOE", type="lower",title="\nCorrelation Matrix of Loneliness, Stress, Happiness, and Sense of Purpose")
+#Blue = positive correlation
+#Red = negative correlation
+#All are significant
+
+```
+
+Question 4) How do the various measures impact exam scores?
+Specifically looking at Loneliness, Happiness, Stress, and Purpose
+Q4 Graphs
+```{r eval = TRUE}
+
+p3 <- ggplot(quant_data, aes(STRESS, Final)) + geom_point(size=1,position="jitter")+
+  labs(title="Impact of Stress on Exam Scores") +
+  labs(x="Stress", y="Final Exam Score %")+geom_smooth(method = "lm", se = TRUE)
+grid.newpage()
+footnote3 <- "\n\nNote: Each dot represents one student.\n The Y axis represents the % score on the Final Exam.\nThe blue line represents a fitted regression line and Standard Error."
+g3 <- arrangeGrob(p3, bottom = textGrob(footnote3, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontface = "italic", fontsize = 12)))
+grid.draw(g3)
+#slightly negative
+
+```
+
+Question 5) Are people who do a higher frequency of happiness practices happier?
+We will be looking at the 12 Happiness Practices taught throughout the course:
+Frequency_3_Good_Things, Frequency_Active_Listening, Frequency_Awe_Walk, Frequency_Body_Scan, Frequency_Forgiveness, Frequency_Gratitude_Journal,
+Frequency_Gratitude_Letter, Frequency_Ideal_Self, Frequency_Meditation, Frequency_Mindful_Breathing, Frequency_Random_Kindness, Frequency_Self_Compassion_Letter
+
+Q5 Graphs
+```{r eval=TRUE}
+
+p4 <- ggplot(quant_data, aes(Frequency_Ideal_Self , SHS)) + geom_point(size=1,position="jitter")+
+  labs(title="Impact of Frequency of Ideal Self Happines Practice on Subjective Happiness") +
+  labs(x="Frequency of doing Ideal Self Practice", y="Subjective Happiness")+geom_smooth(method = "lm", se = TRUE)
+grid.newpage()
+footnote4 <- "\n\nNote: Each dot represents one student.\n The Y axis represents Subjective Happiness.\nThe blue line represents a fitted regression line and Standard Error."
+g4 <- arrangeGrob(p4, bottom = textGrob(footnote4, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontface = "italic", fontsize = 12)))
+grid.draw(g4)
+#positive relationship
+
+p5 <- ggplot(quant_data, aes(Frequency_Random_Kindness, SHS)) + geom_point(size=1,position="jitter")+
+  labs(title="Impact of Frequency of Random acts of Kindness Happiness Practice of Subjective Happiness") +
+  labs(x="Frequency of doing Random Acts of Kindness", y="Subjective Happiness")+geom_smooth(method = "lm", se = TRUE)
+grid.newpage()
+footnote5 <- "\n\nNote: Each dot represents one student.\n The Y axis represents Subjective Happiness.\nThe blue line represents a fitted regression line and Standard Error."
+g5 <- arrangeGrob(p5, bottom = textGrob(footnote5, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontface = "italic", fontsize = 12)))
+grid.draw(g5)
+#positive relationship
+```
+
+Question 6) Does paying for a verified certificate impact exam scores?
+Graphing Q6
+```{r eval=TRUE}
+p6 <- ggplot(quant_data, aes(Enrollment.Track))+stat_summary_bin(aes(y = Final), fun.y = "mean", geom = "bar", fill="blue")+
+labs(title="Impact of Auditing vs. Paid Certificate on Final Exam Score") +
+  labs(x="Course Track", y="Final Exam Score %")
+grid.newpage()
+grid.draw(p6)
+#verified (paid) track -> higher exam scores
+```
+
+Creating a bar plot of most frequent words & word cloud of the text responses for
+what students liked the most about the course.
+```{r}
+docs <- Corpus(VectorSource(quant_data$Course_Like_Most_TEXT))
+dtm <- DocumentTermMatrix(docs,
+           control = list(tolower = TRUE,
+                          removePunctuation = TRUE,
+                          removeNumbers = TRUE,
+                          stopwords = TRUE,
+                          stemming=TRUE))
+freq <- sort(colSums(as.matrix(dtm)),decreasing=TRUE)
+head(freq)
+
+wf <- data.frame(word=names(freq), freq=freq)
+head(wf)
+
+p7 <- subset(wf, freq>50) %>%
+   ggplot(aes(word, freq)) +
+        geom_bar (stat ="identity") +
+        theme(axis.text.x=element_text(angle=45,hjust=1))+
+  labs(title="Most Frequent Words in Text for What Students Liked Most") +
+  labs(x="Words", y="Frequency")
+grid.newpage()
+grid.draw(p7)
+
+# wordcloud
+set.seed(123)
+plot.new()
+wordcloud(names(freq), freq, max.words=100, colors=brewer.pal(6,"Dark2"))+
+text(x=0.5, y=0.99, "Word Cloud of What Students Liked Most")
+
+
+```
+Summary: The most frequent words illuminate that the students
+enjoy the course vidoes & the happiness practices.
+The word cloud highlights that common words were: happiness practices, videos, scientific research, and the course instructors (dacher keltner & Emiliana!)
+
+Creating a bar plot of most frequent words & word cloud of the text responses for
+what suggestions were given for course improvement.
+```{r}
+docs2 <- Corpus(VectorSource(quant_data$Course_Changes_TEXT))
+dtm2 <- DocumentTermMatrix(docs2,
+           control = list(tolower = TRUE,
+                          removePunctuation = TRUE,
+                          removeNumbers = TRUE,
+                          stopwords = TRUE,
+                          stemming=TRUE))
+freq2 <- sort(colSums(as.matrix(dtm2)),decreasing=TRUE)
+head(freq2)
+
+wf2 <- data.frame(word=names(freq2), freq2=freq2)
+head(wf2)
+
+p8 <- subset(wf2, freq2>50) %>%
+    ggplot(aes(word, freq2)) +
+        geom_bar (stat ="identity") +
+        theme(axis.text.x=element_text(angle=45,hjust=1))+
+   labs(title="Most Frequent Words in Text for Course Improvements") +
+  labs(x="Words", y="Frequency")
+grid.newpage()
+grid.draw(p8)
+# wordcloud
+set.seed(123)
+wordcloud(names(freq2), freq2, max.words=100, colors=brewer.pal(6,"Dark2"))+
+text(x=0.5, y=0.99, "Word Cloud of Suggestions for Improvement")
+```
+Summary: The most frequent words illuminate that the students may be feeling that the course takes up too much time to finish.
+The word cloud highlights the same idea, time & week are prominent in the cloud. This could be that maybe there is not enough time (9 weeks)
+to finish all of the course content. Perhaps they do not like the weekly style of the course either. 
+
+The following graph will plot the polarity of the statement of how the course impacted the student's lives. It will take into account which track they are on.
+```{r}
+# calculate polarity
+poldat <- with(quant_data, polarity(Impact_TEXT, Enrollment.Track))
+p9 <- plot(poldat)
+p9 <- x$p2
+grid.newpage()
+footnote9 <- "\n\nNote: This graph shows the polarity of the student's statement of how the course.\nimpacted them. It also takes into acount which track they are on."
+g9 <- arrangeGrob(p9, bottom = textGrob(footnote9, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontface = "italic", fontsize = 12)))
+grid.draw(g9)
+```
+Summary: There is a slight difference between the two enrollment tracks.
+
+
+The following graph will plot the polarity of the statement of how the course impacted the student's lives. It will take into account
+how many hours per week students spent on the course.
+```{r}
+# calculate polarity
+poldat2 <- with(quant_data, polarity(Impact_TEXT, Weekly_Hours))
+x2 <- plot(poldat2)
+p10 <- x2$p2
+grid.newpage()
+footnote10 <- "\n\nNote: This graph shows the polarity of the student's statement of suggestions for course improvements\nIt also takes into acount how many hours a week they put into the course."
+g10<- arrangeGrob(p10, bottom = textGrob(footnote10, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontface = "italic", fontsize = 12)))
+grid.draw(g10)
+```
+Summary: The highest polarity ratings of course impact came from those who spent the most amount of time on the course.
+
+Now I will save all of my plots as individual PDFs
+
+```{r}
+setwd("~/Desktop/ps239t_final/Results") #setting my working directory to the results folder.
+pdf("time_exams.pdf")
+grid.draw(g)
+dev.off()
+
+pdf("mindful_breathing_exams.pdf")
+grid.draw(g2)
+dev.off()
+
+pdf("stress_exams.pdf")
+grid.draw(g3)
+dev.off()
+
+pdf("ideal_self_happiness.pdf")
+grid.draw(g4)
+dev.off()
+
+pdf("random_kindness_happiness.pdf")
+grid.draw(g5)
+dev.off()
+
+pdf("verified_track_exams.pdf")
+grid.draw(p6)
+dev.off()
+
+pdf("frequency_liked_most.pdf")
+grid.draw(p7)
+dev.off()
+
+pdf("word_cloud_liked_most.pdf")
+wordcloud(names(freq), freq, max.words=100, colors=brewer.pal(6,"Dark2"))+
+text(x=0.5, y=0.99, "Word Cloud of What Students Liked Most")
+dev.off()
+
+pdf("frequency_suggestions.pdf")
+grid.draw(p8)
+dev.off()
+
+pdf("word_cloud_suggestions.pdf")
+wordcloud(names(freq2), freq2, max.words=100, colors=brewer.pal(6,"Dark2"))+
+text(x=0.5, y=0.99, "Word Cloud of Suggestions for Improvement")
+dev.off()
+
+pdf("verified_track_course_impact.pdf")
+grid.draw(g9)
+dev.off()
+
+pdf("hours_spent_course_impact.pdf")
+grid.draw(g10)
+dev.off()
+
+pdf("Correlation_Matrix.pdf")
+col <- colorRampPalette(c("#BB4444","#EE9988","#FFFFFF", "#77AADD", "#4477AA"))
+corrplot(mcor, method="shade", shade.col=NA, tl.col="black", tl.srt=45,
+         col=col(200), addCoef.col="black", addcolorlabel="no", order="AOE", type="lower",title="\nCorrelation Matrix of Loneliness, Stress, Happiness, and Sense of Purpose")
+dev.off()
+```
+

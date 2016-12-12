@@ -1,0 +1,187 @@
+---
+title: "Quantitative Analyses"
+author: "Amanda D. Perez"
+date: "December 01, 2016"
+output: html_document
+---
+This script will conduct quantitative analyses with the data from the
+Greater Good Science Center's Online Science of Happiness Course.
+
+This is a huge dataset with nearly 200 variables. Many Q's could be looked at, but for
+the purposed of this project I will narrow my scope.
+
+This script will look at/answer the following questions:
+1) Does the amount of time (weekly) spent on the course impact exam scores?
+2) Do higher frequencies of doing happiness practices lead to higher exam scores?
+3) What are the correlations b/w specific measures?
+4) How do the various measures impact exam scores?
+5) Are people who do a higher frequency of happiness practices happier?
+6) Does paying for a verified certificate impact exam scores?
+
+First, I will install/load the necessary libraries.
+```{r eval=TRUE}
+libs_needed <- c("Hmisc","stats")
+install.packages(libs_needed)
+lapply(libs_needed, require, character.only = TRUE)
+```
+
+Next, I will set my working directory and load the necessary file.
+This file was created in the previous (01_merge-data.Rmd) file.
+```{r eval=TRUE}
+setwd("~/Desktop/ps239t_final/Data")
+quant_data <- read.csv("Dataset_For_Quantitative_Analysis.csv")
+```
+objects(quant_data)
+Question 1) Does the amount of time (weekly) spent on the course impact exam scores?
+```{r eval=TRUE}
+quant_data$Final <- (quant_data$Final)*100 #This is converting the exam score into a percent (out of 100%)
+mod.1 <- lm(Final ~Weekly_Hours, data=quant_data ) #Running a linear regression
+summary(mod.1)
+```
+Summary: Main effect of weekly hours spent on course such that the more time spent, the better students did on the final exam.
+
+Question 2) Do higher frequencies of doing happiness practices lead to higher exam scores?
+We will be looking at the 12 Happiness Practices taught throughout the course:
+Frequency_3_Good_Things, Frequency_Active_Listening, Frequency_Awe_Walk, Frequency_Body_Scan, Frequency_Forgiveness, Frequency_Gratitude_Journal,
+Frequency_Gratitude_Letter, Frequency_Ideal_Self, Frequency_Meditation, Frequency_Mindful_Breathing, Frequency_Random_Kindness, Frequency_Self_Compassion_Letter
+```{r eval=TRUE}
+mod.2 <- lm(Final ~ Frequency_3_Good_Things, data=quant_data)
+summary(mod.2) #not significant
+
+mod.3 <- lm(Final ~ Frequency_Active_Listening, data=quant_data)
+summary(mod.3) #not significant
+
+mod.4 <- lm(Final ~ Frequency_Awe_Walk, data=quant_data)
+summary(mod.4)  #significant: more awe walks -> lower final exam scores. Counterintuitive finding.
+
+mod.5 <- lm(Final ~ Frequency_Body_Scan, data=quant_data)
+summary(mod.5) #not significant
+
+mod.6 <- lm(Final ~ Frequency_Forgiveness, data=quant_data)
+summary(mod.6) #significant: more foregiveness -> lower final exam scores. Counterintuitive finding.
+
+mod.7 <- lm(Final ~ Frequency_Gratitude_Journal, data=quant_data)
+summary(mod.7) #not significant
+
+mod.8 <- lm(Final ~ Frequency_Gratitude_Letter, data=quant_data)
+summary(mod.8) #significant: more gratitude letters -> lower final exam scores. Counterintuitive finding.
+
+mod.9 <- lm(Final ~ Frequency_Ideal_Self, data=quant_data)
+summary(mod.9) #significant: more ideal self practice-> lower final exam scores. Counterintuitive finding.
+
+mod.10 <- lm(Final ~ Frequency_Meditation, data=quant_data)
+summary(mod.10) #not significant
+
+mod.11 <- lm(Final ~ Frequency_Mindful_Breathing, data=quant_data)
+summary(mod.11) #higher mindfulness -> higher exam scores
+
+mod.12 <- lm(Final ~ Frequency_Random_Kindness, data=quant_data)
+summary(mod.12) #not significant
+
+mod.13 <- lm(Final ~ Frequency_Self_Compassion_Letter, data=quant_data)
+summary(mod.13) #significant: more compassion letters-> lower final exam scores. Counterintuitive finding.
+
+mod.13b <- lm(Final ~ Frequency_3_Good_Things+Frequency_Active_Listening+ Frequency_Awe_Walk+ Frequency_Body_Scan+Frequency_Forgiveness+Frequency_Gratitude_Journal+
+Frequency_Gratitude_Letter+ Frequency_Ideal_Self+Frequency_Meditation+Frequency_Mindful_Breathing+Frequency_Random_Kindness+ Frequency_Self_Compassion_Letter,data=quant_data)
+summary(mod.13b)
+```
+Summary: Some counterintuitive findings, but when controlling for all of the practices, only mindfulness remained significant.
+Higher frequency of mindfulness breathing led to higher final exam scores.
+
+
+Question 3) What are the correlations b/w specific measures?
+Specifically, we will look at Subjective happiness, sense of purpose, stress, and loneliness. 
+```{r eval=TRUE}
+measure.names <- c("LONELY" ,"SHS" ,"PURPOSE"  ,"STRESS") #names of variables I will subset
+my.cors <- quant_data[measure.names] #creating a matrix w/complete observations &naming my variables
+my.cors <- na.omit(my.cors)
+names(my.cors) <- c("LONELY","SHS","PURPOSE","STRESS")
+names(my.cors)
+my.cors <- as.matrix(my.cors)
+rcorr(my.cors, type="pearson") #RUNS CORRELATION MATRIX, ALL SIGNIFICANT
+
+```
+Summary: These correlations are all significant and all make sense. 
+Loneliness is positively correlates with stress & negatively correlated with happiness & sense of purpose.
+Happiness is positive correlated with sense of purpose & negatively w/stress & loneliness.
+
+
+
+Question 4) How do the various measures impact exam scores?
+Specifically looking at Loneliness, Happiness, Stress, and Purpose
+```{r eval=TRUE}
+mod.14 <- lm(Final ~ LONELY, data=quant_data)
+summary(mod.14)#not significant
+
+mod.15 <- lm(Final ~ SHS, data=quant_data)
+summary(mod.15) #not significant
+
+mod.16 <- lm(Final ~ STRESS, data=quant_data)
+summary(mod.16) #significant: higher stress -> lower exam scores
+
+mod.17 <- lm(Final ~ PURPOSE, data=quant_data)
+summary(mod.17) #not significant
+
+mod.17b <- lm(Final ~ PURPOSE+SHS+STRESS+LONELY,data=quant_data)
+summary(mod.17b) #marginal
+```
+Summary: The more stressed a student is, the lower their final exam score is.
+
+Question 5) Are people who do a higher frequency of happiness practices happier?
+We will be looking at the 12 Happiness Practices taught throughout the course:
+Frequency_3_Good_Things, Frequency_Active_Listening, Frequency_Awe_Walk, Frequency_Body_Scan, Frequency_Forgiveness, Frequency_Gratitude_Journal,
+Frequency_Gratitude_Letter, Frequency_Ideal_Self, Frequency_Meditation, Frequency_Mindful_Breathing, Frequency_Random_Kindness, Frequency_Self_Compassion_Letter
+```{r eval=TRUE}
+mod.18 <- lm(SHS ~ Frequency_3_Good_Things, data=quant_data)
+summary(mod.18) #significant & positive
+
+mod.19 <- lm(SHS ~ Frequency_Active_Listening, data=quant_data)
+summary(mod.19) #significant &positive
+
+mod.20 <- lm(SHS ~ Frequency_Awe_Walk, data=quant_data)
+summary(mod.20)  #significant & positive
+
+mod.21 <- lm(SHS ~ Frequency_Body_Scan, data=quant_data)
+summary(mod.21) #significant + positive
+
+mod.22 <- lm(SHS ~ Frequency_Forgiveness, data=quant_data)
+summary(mod.22) #significant & positive
+
+mod.23 <- lm(SHS ~ Frequency_Gratitude_Journal, data=quant_data)
+summary(mod.23) #significant & positive
+
+mod.24 <- lm(SHS ~ Frequency_Gratitude_Letter, data=quant_data)
+summary(mod.24) #significant & positive
+
+mod.25 <- lm(SHS ~ Frequency_Ideal_Self, data=quant_data)
+summary(mod.25) 
+
+mod.26 <- lm(SHS ~ Frequency_Meditation, data=quant_data)
+summary(mod.26) #significant & positive
+
+mod.27 <- lm(SHS ~ Frequency_Mindful_Breathing, data=quant_data)
+summary(mod.27) #significant & positive
+
+mod.28 <- lm(SHS ~ Frequency_Random_Kindness, data=quant_data)
+summary(mod.28) #significant & positive
+
+mod.29 <- lm(SHS ~ Frequency_Self_Compassion_Letter, data=quant_data)
+summary(mod.29) #significant & positive
+
+mod.30 <- lm(SHS ~ Frequency_3_Good_Things+Frequency_Active_Listening+ Frequency_Awe_Walk+ Frequency_Body_Scan+Frequency_Forgiveness+Frequency_Gratitude_Journal+
+Frequency_Gratitude_Letter+ Frequency_Ideal_Self+Frequency_Meditation+Frequency_Mindful_Breathing+Frequency_Random_Kindness+ Frequency_Self_Compassion_Letter,data=quant_data)
+summary(mod.30)
+```
+Summary: 2 main effects persist after controlling for the other happiness practices.
+Higher frequency of random acts of kindness -> higher subjective happiness
+Higher frequency of ideal self practice -> higher subjective happiness
+
+
+Question 6) Does paying for a verified certificate impact exam scores?
+```{r eval=TRUE}
+mod.31 <- lm(Final~ Enrollment.Track+Weekly_Hours, data=quant_data) #controlling for hours put into the course weekly
+summary(mod.31)
+```
+Summary: Marginal main effect of hours spent (more hours -> higher exam scores) 
+Main effect of track persisted after controlling for hours spent studying.
+Having a paid certificate (verified track) -> higher exam scores versus students who audit.

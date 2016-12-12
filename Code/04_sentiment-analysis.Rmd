@@ -1,0 +1,57 @@
+---
+title: "04_sentiment_analysis"
+author: "Amanda D. Perez"
+date: "December 01, 2016"
+output: html_document
+---
+
+This script will look at the polarity of text responses re: what
+impact the science of happiness had on student's lives.
+I will be breaking this down by enrollment track; This is based on the findings from the
+quantitative analyses showing significant differences between the  groups.
+
+First, I will install/load the necessary libraries.
+```{r eval=TRUE}
+require(ggplot2) # plotting discourse data
+require(qdap) # quantiative discourse analysis of transcripts
+require(data.table) # for easier data manipulation
+require(scales) # to help us plot
+```
+
+Next, I will set my working directory and load the necessary file.
+I will be using the same cleaned dataset used for previous analyses.
+```{r eval=TRUE}
+setwd("~/Desktop/ps239t_final/Data")
+sentiment_data <- read.csv("Dataset_For_Quantitative_Analysis.csv")
+```
+
+In `qdap`, we analyze sentiment using the `polarity` function.
+objects(sentiment_data)
+```{r}
+# calculate polarity
+(poldat <- with(sentiment_data, polarity(Impact_TEXT, Enrollment.Track)))
+
+# have a peak of each line
+counts(poldat)[100:140,]
+
+# plot
+plot(poldat)
+
+# we can get just the second plot this way:
+x <- plot(poldat)
+x$p2
+```
+Summary: There is a very slight difference in polarity of course impact statement based on course track.
+Those on verified (paid) track have higher polarity. 
+
+What about the impact of Weekly hours spent on course? Quanititative analyses also highlighted the importance.
+```{r}
+# calculate polarity
+(poldat2 <- with(sentiment_data, polarity(Impact_TEXT, Weekly_Hours)))
+
+# look at some of the lines
+counts(poldat2)[100:140,]
+
+```
+Summary: It seems weekly hours put into the course also impacted polarity of impact statements.
+Specifically, the higher polarity was given tho students who spent the most time on the course.

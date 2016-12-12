@@ -1,0 +1,166 @@
+---
+title: "Pre-Processing Text"
+author: "Amanda D. Perez"
+date: "December 01, 2016"
+output: html_document
+---
+This script will pre-process and begin to look at 2 specific text responses
+from the post-course survey of the Greater Good Science Center's Online Science of Happiness Course
+We will first pre-process text for what was liked the most about the course.
+Second, we will pre-process text for what suggestions for improvement are given.
+
+First, I will install/load the necessary libraries.
+```{r eval=TRUE}
+require(tm) # Framework for text mining
+require(dplyr)
+require(RTextTools) # a machine learning package for text classification written in R
+require(qdap) # Quantiative discourse analysis of transcripts
+require(qdapDictionaries)
+require(SnowballC) # for stemming
+```
+
+Next, I will set my working directory and load the necessary file.
+I will be using the same cleaned dataset used for previous analyses.
+```{r eval=TRUE}
+setwd("~/Desktop/ps239t_final/Data")
+qual_data <- read.csv("Dataset_For_Quantitative_Analysis.csv")
+```
+
+
+I will create my corpus
+```{r eval=TRUE}
+docs <- Corpus(VectorSource(qual_data$Course_Like_Most_TEXT))
+#Look at content of first entry
+as.character(docs[1])
+```
+
+
+Converting my corpus to a DTM while completing the pre-processing steps in one step.
+
+```{r}
+dtm <- DocumentTermMatrix(docs,
+           control = list(tolower = TRUE,
+                          removePunctuation = TRUE,
+                          removeNumbers = TRUE,
+                          stopwords = TRUE,
+                          stemming=TRUE))
+```
+
+
+Looking at the structure of my DTM
+```{r}
+dim(dtm) #861 documents 
+```
+
+Obtaining term frequencies as a vector by converting the document term matrix into a matrix and summing the column counts:
+```{r}
+freq <- colSums(as.matrix(dtm))
+length(freq) #total of 945 terms
+```
+
+By ordering the frequencies listing the most frequent terms and the least frequent terms:
+
+```{r}
+# order
+ord <- order(freq)
+
+# Least frequent terms
+freq[head(ord)]
+
+# most frequent
+freq[tail(ord)]
+
+# frequency of frenquencies
+head(table(freq),15)
+tail(table(freq),15)
+
+```
+Summary: Most frequent words:happiness & practices
+
+Exploring word frequences of my dtm.
+
+```{r}
+# Have a look at common words
+findFreqTerms(dtm, lowfreq=50) # words that appear at least 50 times
+
+# Which words correlate with "happi"? (stemmed version of happiness)
+findAssocs(dtm, "happi", 0.3) #compassion is one of the highest correlates
+
+# table of the most frequent words
+freq <- sort(colSums(as.matrix(dtm)),decreasing=TRUE)
+head(freq) #happiness is the most frequent word
+
+
+```
+
+
+Next we will look at suggestions for course improvement
+I will create my corpus again
+```{r eval=TRUE}
+docs2 <- Corpus(VectorSource(qual_data$Course_Changes_TEXT))
+#Look at content of first entry
+as.character(docs2[1])
+```
+
+
+Converting my corpus to a DTM while completing the pre-processing steps in one step.
+
+```{r}
+dtm2 <- DocumentTermMatrix(docs2,
+           control = list(tolower = TRUE,
+                          removePunctuation = TRUE,
+                          removeNumbers = TRUE,
+                          stopwords = TRUE,
+                          stemming=TRUE))
+```
+
+
+Looking at the structure of my DTM
+```{r}
+dim(dtm2) #861 documents 
+```
+
+Obtaining term frequencies as a vector by converting the document term matrix into a matrix and summing the column counts:
+```{r}
+freq2 <- colSums(as.matrix(dtm2))
+length(freq2) #total of 1045 terms
+```
+
+By ordering the frequencies we can list the most frequent terms and the least frequent terms:
+
+```{r}
+# order
+ord2 <- order(freq2)
+
+# Least frequent terms
+freq2[head(ord2)]
+
+# most frequent
+freq2[tail(ord2)] #course & time are most frequent words.
+
+# frequency of frenquencies
+head(table(freq2),15)
+tail(table(freq2),15)
+
+```
+
+Exploring word frequences of my dtm
+
+```{r}
+# Have a look at common words
+findFreqTerms(dtm2, lowfreq=50) # words that appear at least 50 times
+
+# Which words correlate with "time"? (stemmed version of happiness)
+findAssocs(dtm2, "time", 0.3)
+
+# table of the most frequent words
+freq2 <- sort(colSums(as.matrix(dtm2)),decreasing=TRUE)
+head(freq2)
+
+wf2 <- data.frame(word=names(freq2), freq2=freq2)
+head(wf2)
+
+
+```
+A lot of words correlate with the appearance of time, such as overwhelm, cumbersom, and material.
+In improving the course, we could likely look at making sure the amount of time matches the amount of content.

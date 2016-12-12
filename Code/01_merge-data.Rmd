@@ -1,0 +1,813 @@
+---
+title: "Merging & Cleaning Data"
+author: "Amanda D. Perez"
+date: "December 01, 2016"
+output: html_document
+---
+
+This script will merge and clean data produced from the Greater Good Science Center's 
+Online Science of Happiness Course. 
+
+First, I will install/load the necessary library.
+```{r eval=TRUE}
+install.packages("psych")
+library(psych)
+```
+
+Next, I will set my working directory and load the necessary files.
+data1 contains the data from the post-course survey. The identifier here is "edX_ID"
+data2 contains data from the course (exam scores, weekly check-ins, demographics, etc.) The identifier here is "User_ID"
+mydata will be these datasets merged by utilizing a .csv of a key.
+mykey contains both edX_ID & User_ID of each student. 
+Lastly, I will remove duplicated entries from a single edx_id
+```{r eval=TRUE}
+setwd("~/Desktop/ps239t_final/Data")
+data1 <- read.csv("post_course_survey.csv")
+data2 <- read.csv("edx_data.csv")
+mykey <- read.csv("edx_id_key.csv")
+mydata  <- merge(mykey, data1, by = c('edX_ID'))
+mydata  <- merge(mydata, data2, by = c('User_ID'))
+mydata <- subset(mydata,!duplicated(mydata$edX_ID))
+```
+
+
+I will be using the psych package to score items. Before that, I need to clean my data.
+The post-course survey data from qualtrics is messy & has choice text instead of numeric values.
+For some reason, outputting it fron Qualtrics as numeric values always gives me weird numbers.
+In the following chunk, I will use "ifelse" statements to re-code the values. 
+This will be a large chunk of code, but it is all repetative. 
+It is all in one chunk so that it can be run together (&quickly).
+Most questions have different scalepoints & labels so there is no easy way to streamline (that I have found).
+```{r eval=TRUE}
+#Re-coding the Q "Have you applied the material from GG101x: The Science of Happiness to your life?"
+mydata$Applied_to_life<- ifelse(mydata$Applied_to_life == "Not at all", 1, 
+                            ifelse(mydata$Applied_to_life == "A little", 2,
+                                   ifelse(mydata$Applied_to_life=="Moderately",3,
+                                          ifelse(mydata$Applied_to_life=="A Lot",4,
+                                                 ifelse(mydata$Applied_to_life=="Extensively",5,NA)))))
+
+#Re-coding the Q "Did GG101x: The Science of Happiness meet your goals or expectations?"
+mydata$Course_Expectation<- ifelse(mydata$Course_Expectation == "Not at all", 1, 
+                            ifelse(mydata$Course_Expectation == "Slightly", 2,
+                                   ifelse(mydata$Course_Expectation=="Somewhat",3,
+                                          ifelse(mydata$Course_Expectation=="Mostly",4,
+                                                 ifelse(mydata$Course_Expectation=="Completely",5,NA)))))
+
+#Re-coding the Q "How satisfied are you with GG101x: The Science of Happiness, overall?"
+mydata$Course_Satisfaction<- ifelse(mydata$Course_Satisfaction == "Not at all", 1, 
+                            ifelse(mydata$Course_Satisfaction == "Slightly", 2,
+                                   ifelse(mydata$Course_Satisfaction=="Moderately",3,
+                                          ifelse(mydata$Course_Satisfaction=="Very",4,
+                                                 ifelse(mydata$Course_Satisfaction=="Extremely",5,NA)))))
+
+#Re-coding the Q "Did you ever see a post submitted by a Community TA?"
+mydata$Forums_Community_TA<- ifelse(mydata$Forums_Community_TA == "Yes", 1, 
+                            ifelse(mydata$Forums_Community_TA == "No", 0, NA))
+
+#Re-coding the Q "Did you ever post, read posts, or otherwise participate in the GG101x Discussion forums?"
+mydata$Forums_Participate<- ifelse(mydata$Forums_Participate == "Yes", 1, 
+                            ifelse(mydata$Forums_Participate == "No", 0, NA))
+
+#Re-coding the series of Qs "Please indicate approximately how often you've done each of the following practices since starting the course."
+
+#"Three Good Things(listing three positive things that happened in your day and considering what caused them)"
+mydata$Frequency_3_Good_Things<- ifelse(mydata$Frequency_3_Good_Things == "0 times", 1, 
+                            ifelse(mydata$Frequency_3_Good_Things == "1-2 times", 2,
+                                   ifelse(mydata$Frequency_3_Good_Things=="3-4 times",3,
+                                          ifelse(mydata$Frequency_3_Good_Things=="4-5 times",4,
+                                                 ifelse(mydata$Frequency_3_Good_Things=="5-6 times",5,
+                                                        ifelse(mydata$Frequency_3_Good_Things=="6-7 times",6,
+                                                               ifelse(mydata$Frequency_3_Good_Things=="7-8 times",7,
+                                                                      ifelse(mydata$Frequency_3_Good_Things=="9-10 times", 8,
+                                                                             ifelse(mydata$Frequency_3_Good_Things=="More than 10 times",9,NA)))))))))
+
+#"Active Listening (expressing active interest and empathy during a conversation)"
+mydata$Frequency_Active_Listening<- ifelse(mydata$Frequency_Active_Listening == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Active_Listening == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Active_Listening=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Active_Listening=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Active_Listening=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Active_Listening=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Active_Listening=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Active_Listening=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Active_Listening=="More than 10 times",9,NA)))))))))
+
+#"Awe Walk (taking a walk that inspires awe)"
+mydata$Frequency_Awe_Walk<- ifelse(mydata$Frequency_Awe_Walk == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Awe_Walk == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Awe_Walk=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Awe_Walk=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Awe_Walk=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Awe_Walk=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Awe_Walk=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Awe_Walk=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Awe_Walk=="More than 10 times",9,NA)))))))))
+
+#Body Scan (systematically paying attention to physical sensations in body)
+mydata$Frequency_Body_Scan<- ifelse(mydata$Frequency_Body_Scan == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Body_Scan == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Body_Scan=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Body_Scan=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Body_Scan=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Body_Scan=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Body_Scan=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Body_Scan=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Body_Scan=="More than 10 times",9,NA)))))))))
+
+#"Forgiveness (following Robert Enright&#39;s eight steps to forgiveness)"
+mydata$Frequency_Forgiveness<- ifelse(mydata$Frequency_Forgiveness == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Forgiveness == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Forgiveness=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Forgiveness=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Forgiveness=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Forgiveness=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Forgiveness=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Forgiveness=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Forgiveness=="More than 10 times",9,NA)))))))))
+
+#"Gratitude Journal (writing down things for which you are grateful)"
+mydata$Frequency_Gratitude_Journal<- ifelse(mydata$Frequency_Gratitude_Journal == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Gratitude_Journal == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Gratitude_Journal=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Gratitude_Journal=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Gratitude_Journal=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Gratitude_Journal=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Gratitude_Journal=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Gratitude_Journal=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Gratitude_Journal=="More than 10 times",9,NA)))))))))
+
+#"Gratitude Letter (expressing gratitude in writing to someone)"
+mydata$Frequency_Gratitude_Letter<- ifelse(mydata$Frequency_Gratitude_Letter == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Gratitude_Letter == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Gratitude_Letter=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Gratitude_Letter=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Gratitude_Letter=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Gratitude_Letter=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Gratitude_Letter=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Gratitude_Letter=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Gratitude_Letter=="More than 10 times",9,NA)))))))))
+
+#"Best Possible Self (writing about what your ideal future life would look like)"
+mydata$Frequency_Ideal_Self<- ifelse(mydata$Frequency_Ideal_Self == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Ideal_Self == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Ideal_Self=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Ideal_Self=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Ideal_Self=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Ideal_Self=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Ideal_Self=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Ideal_Self=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Ideal_Self=="More than 10 times",9,NA)))))))))
+
+#"Loving Kindness Meditation (sending goodwill and kindness to others)"
+mydata$Frequency_Meditation<- ifelse(mydata$Frequency_Meditation == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Meditation == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Meditation=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Meditation=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Meditation=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Meditation=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Meditation=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Meditation=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Meditation=="More than 10 times",9,NA)))))))))
+
+#"Mindful Breathing (attending to breath for 15 minutes or more)"
+mydata$Frequency_Mindful_Breathing<- ifelse(mydata$Frequency_Mindful_Breathing == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Mindful_Breathing == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Mindful_Breathing=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Mindful_Breathing=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Mindful_Breathing=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Mindful_Breathing=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Mindful_Breathing=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Mindful_Breathing=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Mindful_Breathing=="More than 10 times",9,NA)))))))))
+
+#"Random Acts of Kindness (performing five acts of kindness in one day)"
+mydata$Frequency_Random_Kindness<- ifelse(mydata$Frequency_Random_Kindness == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Random_Kindness == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Random_Kindness=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Random_Kindness=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Random_Kindness=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Random_Kindness=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Random_Kindness=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Random_Kindness=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Random_Kindness=="More than 10 times",9,NA)))))))))
+
+#"Self-Compassionate Letter (write a letter to yourself expressing compassion)"
+mydata$Frequency_Self_Compassion_Letter<- ifelse(mydata$Frequency_Self_Compassion_Letter == "0 times", 1, 
+                                        ifelse(mydata$Frequency_Self_Compassion_Letter == "1-2 times", 2,
+                                               ifelse(mydata$Frequency_Self_Compassion_Letter=="3-4 times",3,
+                                                      ifelse(mydata$Frequency_Self_Compassion_Letter=="4-5 times",4,
+                                                             ifelse(mydata$Frequency_Self_Compassion_Letter=="5-6 times",5,
+                                                                    ifelse(mydata$Frequency_Self_Compassion_Letter=="6-7 times",6,
+                                                                           ifelse(mydata$Frequency_Self_Compassion_Letter=="7-8 times",7,
+                                                                                  ifelse(mydata$Frequency_Self_Compassion_Letter=="9-10 times", 8,
+                                                                                         ifelse(mydata$Frequency_Self_Compassion_Letter=="More than 10 times",9,NA)))))))))
+
+#Re-coding the Q "Have you visited the Greater Good Science Center website since joining GG101x: The Science of Happiness?"
+mydata$GGSC_Visit<- ifelse(mydata$GGSC_Visit == "Yes", 1, 
+                            ifelse(mydata$GGSC_Visit == "No", 0, NA))
+
+#Re-coding the series of Qs "For each of the following practices that you've completed, please indicate on a scale of 1-7 how well you feel it has worked for you--that is, how much has it contributed to your overall happiness level?"
+
+#"Three Good Things(listing three positive things that happened in your day and considering what caused them)"
+mydata$Happiness_3_Good_Things<- ifelse(mydata$Happiness_3_Good_Things == "1-Not at all", 1, 
+                                        ifelse(mydata$Happiness_3_Good_Things == "2", 2,
+                                               ifelse(mydata$Happiness_3_Good_Things=="3",3,
+                                                      ifelse(mydata$Happiness_3_Good_Things=="4",4,
+                                                             ifelse(mydata$Happiness_3_Good_Things=="5",5,
+                                                                    ifelse(mydata$Happiness_3_Good_Things=="6",6,
+                                                                           ifelse(mydata$Happiness_3_Good_Things=="7- Extremely",7,NA)))))))
+
+#"Active Listening (expressing active interest and empathy during a conversation)"
+mydata$Happiness_Active_Listening<- ifelse(mydata$Happiness_Active_Listening == "1-Not at all", 1, 
+                                           ifelse(mydata$Happiness_Active_Listening == "2", 2,
+                                                  ifelse(mydata$Happiness_Active_Listening=="3",3,
+                                                         ifelse(mydata$Happiness_Active_Listening=="4",4,
+                                                                ifelse(mydata$Happiness_Active_Listening=="5",5,
+                                                                       ifelse(mydata$Happiness_Active_Listening=="6",6,
+                                                                              ifelse(mydata$Happiness_Active_Listening=="7- Extremely",7,NA)))))))
+
+#"Awe Walk (taking a walk that inspires awe)"
+mydata$Happiness_Awe_Walk<- ifelse(mydata$Happiness_Awe_Walk == "1-Not at all", 1, 
+                                   ifelse(mydata$Happiness_Awe_Walk == "2", 2,
+                                          ifelse(mydata$Happiness_Awe_Walk=="3",3,
+                                                 ifelse(mydata$Happiness_Awe_Walk=="4",4,
+                                                        ifelse(mydata$Happiness_Awe_Walk=="5",5,
+                                                               ifelse(mydata$Happiness_Awe_Walk=="6",6,
+                                                                      ifelse(mydata$Happiness_Awe_Walk=="7- Extremely",7,NA)))))))
+
+#Body Scan (systematically paying attention to physical sensations in body)
+mydata$Happiness_Body_Scan<- ifelse(mydata$Happiness_Body_Scan == "1-Not at all", 1, 
+                                    ifelse(mydata$Happiness_Body_Scan == "2", 2,
+                                           ifelse(mydata$Happiness_Body_Scan=="3",3,
+                                                  ifelse(mydata$Happiness_Body_Scan=="4",4,
+                                                         ifelse(mydata$Happiness_Body_Scan=="5",5,
+                                                                ifelse(mydata$Happiness_Body_Scan=="6",6,
+                                                                       ifelse(mydata$Happiness_Body_Scan=="7- Extremely",7,NA)))))))
+
+#"Forgiveness (following Robert Enright's eight steps to forgiveness)"
+mydata$Happiness_Forgiveness<- ifelse(mydata$Happiness_Forgiveness == "1-Not at all", 1, 
+                                      ifelse(mydata$Happiness_Forgiveness == "2", 2,
+                                             ifelse(mydata$Happiness_Forgiveness=="3",3,
+                                                    ifelse(mydata$Happiness_Forgiveness=="4",4,
+                                                           ifelse(mydata$Happiness_Forgiveness=="5",5,
+                                                                  ifelse(mydata$Happiness_Forgiveness=="6",6,
+                                                                         ifelse(mydata$Happiness_Forgiveness=="7- Extremely",7,NA)))))))
+
+#"Gratitude Journal (writing down things for which you are grateful)"
+mydata$Happiness_Gratitude_Journal<- ifelse(mydata$Happiness_Gratitude_Journal == "1-Not at all", 1, 
+                                            ifelse(mydata$Happiness_Gratitude_Journal == "2", 2,
+                                                   ifelse(mydata$Happiness_Gratitude_Journal=="3",3,
+                                                          ifelse(mydata$Happiness_Gratitude_Journal=="4",4,
+                                                                 ifelse(mydata$Happiness_Gratitude_Journal=="5",5,
+                                                                        ifelse(mydata$Happiness_Gratitude_Journal=="6",6,
+                                                                               ifelse(mydata$Happiness_Gratitude_Journal=="7- Extremely",7,NA)))))))
+
+#"Gratitude Letter (expressing gratitude in writing to someone)"
+mydata$Happiness_Gratitude_Letter<- ifelse(mydata$Happiness_Gratitude_Letter == "1-Not at all", 1, 
+                                           ifelse(mydata$Happiness_Gratitude_Letter == "2", 2,
+                                                  ifelse(mydata$Happiness_Gratitude_Letter=="3",3,
+                                                         ifelse(mydata$Happiness_Gratitude_Letter=="4",4,
+                                                                ifelse(mydata$Happiness_Gratitude_Letter=="5",5,
+                                                                       ifelse(mydata$Happiness_Gratitude_Letter=="6",6,
+                                                                              ifelse(mydata$Happiness_Gratitude_Letter=="7- Extremely",7,NA)))))))
+
+#"Best Possible Self (writing about what your ideal future life would look like)"
+mydata$Happiness_Ideal_Self<- ifelse(mydata$Happiness_Ideal_Self == "1-Not at all", 1, 
+                                     ifelse(mydata$Happiness_Ideal_Self == "2", 2,
+                                            ifelse(mydata$Happiness_Ideal_Self=="3",3,
+                                                   ifelse(mydata$Happiness_Ideal_Self=="4",4,
+                                                          ifelse(mydata$Happiness_Ideal_Self=="5",5,
+                                                                 ifelse(mydata$Happiness_Ideal_Self=="6",6,
+                                                                        ifelse(mydata$Happiness_Ideal_Self=="7- Extremely",7,NA)))))))
+
+#"Loving Kindness Meditation (sending goodwill and kindness to others)"
+mydata$Happiness_Meditation<- ifelse(mydata$Happiness_Meditation == "1-Not at all", 1, 
+                                     ifelse(mydata$Happiness_Meditation == "2", 2,
+                                            ifelse(mydata$Happiness_Meditation=="3",3,
+                                                   ifelse(mydata$Happiness_Meditation=="4",4,
+                                                          ifelse(mydata$Happiness_Meditation=="5",5,
+                                                                 ifelse(mydata$Happiness_Meditation=="6",6,
+                                                                        ifelse(mydata$Happiness_Meditation=="7- Extremely",7,NA)))))))
+
+#"Mindful Breathing (attending to breath for 15 minutes or more)"
+mydata$Happiness_Mindful_Breathing<- ifelse(mydata$Happiness_Mindful_Breathing == "1-Not at all", 1, 
+                                            ifelse(mydata$Happiness_Mindful_Breathing == "2", 2,
+                                                   ifelse(mydata$Happiness_Mindful_Breathing=="3",3,
+                                                          ifelse(mydata$Happiness_Mindful_Breathing=="4",4,
+                                                                 ifelse(mydata$Happiness_Mindful_Breathing=="5",5,
+                                                                        ifelse(mydata$Happiness_Mindful_Breathing=="6",6,
+                                                                               ifelse(mydata$Happiness_Mindful_Breathing=="7- Extremely",7,NA)))))))
+
+#"Random Acts of Kindness (performing five acts of kindness in one day)"
+mydata$Happiness_Random_Kindness<- ifelse(mydata$Happiness_Random_Kindness == "1-Not at all", 1, 
+                                          ifelse(mydata$Happiness_Random_Kindness == "2", 2,
+                                                 ifelse(mydata$Happiness_Random_Kindness=="3",3,
+                                                        ifelse(mydata$Happiness_Random_Kindness=="4",4,
+                                                               ifelse(mydata$Happiness_Random_Kindness=="5",5,
+                                                                      ifelse(mydata$Happiness_Random_Kindness=="6",6,
+                                                                             ifelse(mydata$Happiness_Random_Kindness=="7- Extremely",7,NA)))))))
+
+#"Self-Compassionate Letter (write a letter to yourself expressing compassion)"
+mydata$Happiness_Self_Compassion_Letter<- ifelse(mydata$Happiness_Self_Compassion_Letter == "1-Not at all", 1, 
+                                                 ifelse(mydata$Happiness_Self_Compassion_Letter == "2", 2,
+                                                        ifelse(mydata$Happiness_Self_Compassion_Letter=="3",3,
+                                                               ifelse(mydata$Happiness_Self_Compassion_Letter=="4",4,
+                                                                      ifelse(mydata$Happiness_Self_Compassion_Letter=="5",5,
+                                                                             ifelse(mydata$Happiness_Self_Compassion_Letter=="6",6,
+                                                                                    ifelse(mydata$Happiness_Self_Compassion_Letter=="7- Extremely",7,NA)))))))
+
+
+#Re-coding the Q "Did you participate in a Happiness Team?"
+mydata$Happiness_Team_Participate<- ifelse(mydata$Happiness_Team_Participate == "Yes, as a leader", 1, 
+                            ifelse(mydata$Happiness_Team_Participate== "No", 0,
+                                   ifelse(mydata$Happiness_Team_Participate=="Yes, as a member",1,NA)))
+
+#Re-coding the Qs "How much did GG101x: The Science of Happiness impact each of these areas of your life?"
+#Academic
+mydata$Impact_Academic<- ifelse(mydata$Impact_Academic == "Not at all", 1, 
+                            ifelse(mydata$Impact_Academic == "Slightly", 2,
+                                   ifelse(mydata$Impact_Academic=="Moderately",3,
+                                          ifelse(mydata$Impact_Academic=="Very much",4,
+                                                 ifelse(mydata$Impact_Academic=="Immensely",5,NA)))))
+#Altruism
+mydata$Impact_Altruism<- ifelse(mydata$Impact_Altruism == "Not at all", 1, 
+                                ifelse(mydata$Impact_Altruism == "Slightly", 2,
+                                       ifelse(mydata$Impact_Altruism=="Moderately",3,
+                                              ifelse(mydata$Impact_Altruism=="Very much",4,
+                                                     ifelse(mydata$Impact_Altruism=="Immensely",5,NA)))))
+#Compassion
+mydata$Impact_Compassion<- ifelse(mydata$Impact_Compassion == "Not at all", 1, 
+                                ifelse(mydata$Impact_Compassion == "Slightly", 2,
+                                       ifelse(mydata$Impact_Compassion=="Moderately",3,
+                                              ifelse(mydata$Impact_Compassion=="Very much",4,
+                                                     ifelse(mydata$Impact_Compassion=="Immensely",5,NA)))))
+#Happiness
+mydata$Impact_Happiness<- ifelse(mydata$Impact_Happiness == "Not at all", 1, 
+                                ifelse(mydata$Impact_Happiness == "Slightly", 2,
+                                       ifelse(mydata$Impact_Happiness=="Moderately",3,
+                                              ifelse(mydata$Impact_Happiness=="Very much",4,
+                                                     ifelse(mydata$Impact_Happiness=="Immensely",5,NA)))))
+#Relationships
+mydata$Impact_Relationships<- ifelse(mydata$Impact_Relationships == "Not at all", 1, 
+                                ifelse(mydata$Impact_Relationships == "Slightly", 2,
+                                       ifelse(mydata$Impact_Relationships=="Moderately",3,
+                                              ifelse(mydata$Impact_Relationships=="Very much",4,
+                                                     ifelse(mydata$Impact_Relationships=="Immensely",5,NA)))))
+#Work
+mydata$Impact_Work<- ifelse(mydata$Impact_Work == "Not at all", 1, 
+                                ifelse(mydata$Impact_Work == "Slightly", 2,
+                                       ifelse(mydata$Impact_Work=="Moderately",3,
+                                              ifelse(mydata$Impact_Work=="Very much",4,
+                                                     ifelse(mydata$Impact_Work=="Immensely",5,NA)))))
+
+#Re-coding the Q "I feel in tune with the people around me."
+mydata$LONELY_1R<- ifelse(mydata$LONELY_1R == "Never", 1, 
+                                ifelse(mydata$LONELY_1R == "Rarely", 2,
+                                       ifelse(mydata$LONELY_1R=="Sometimes",3,
+                                              ifelse(mydata$LONELY_1R=="Often",4,NA))))
+
+#Re-coding the Q "No one really knows me well."
+mydata$LONELY_2<- ifelse(mydata$LONELY_2 == "Never", 1, 
+                                ifelse(mydata$LONELY_2 == "Rarely", 2,
+                                       ifelse(mydata$LONELY_2=="Sometimes",3,
+                                              ifelse(mydata$LONELY_2=="Often",4,NA))))
+
+#Re-coding the Q "I can find companionship when I want it."
+mydata$LONELY_3R<- ifelse(mydata$LONELY_3R == "Never", 1, 
+                                ifelse(mydata$LONELY_3R == "Rarely", 2,
+                                       ifelse(mydata$LONELY_3R=="Sometimes",3,
+                                              ifelse(mydata$LONELY_3R=="Often",4,NA))))
+
+#Re-coding the Q "People are around me but not with me."
+mydata$LONELY_4<- ifelse(mydata$LONELY_4 == "Never", 1, 
+                                ifelse(mydata$LONELY_4 == "Rarely", 2,
+                                       ifelse(mydata$LONELY_4=="Sometimes",3,
+                                              ifelse(mydata$LONELY_4=="Often",4,NA))))
+
+#Re-coding Q's "Thinking back upon your most recent interactions with the person you nominated on the Pre-Course Survey, how much would you say each of the following describe how you have been?"
+#Anxious/Stressed
+mydata$Peer_Anxious.Stressed<- ifelse(mydata$Peer_Anxious.Stressed == "1 - Not at all", 1, 
+                                ifelse(mydata$Peer_Anxious.Stressed == "2 - Slightly", 2,
+                                       ifelse(mydata$Peer_Anxious.Stressed=="3 - Moderately",3,
+                                              ifelse(mydata$Peer_Anxious.Stressed=="4 - Very",4,
+                                                     ifelse(mydata$Peer_Anxious.Stressed=="5 - Extremely",5,NA)))))
+#Calm/Relaxed
+mydata$Peer_Calm.Relaxed<- ifelse(mydata$Peer_Calm.Relaxed == "1 - Not at all", 1, 
+                                      ifelse(mydata$Peer_Calm.Relaxed == "2 - Slightly", 2,
+                                             ifelse(mydata$Peer_Calm.Relaxed=="3 - Moderately",3,
+                                                    ifelse(mydata$Peer_Calm.Relaxed=="4 - Very",4,
+                                                           ifelse(mydata$Peer_Calm.Relaxed=="5 - Extremely",5,NA)))))
+#Compassionate/Nurturing
+mydata$Peer_Compassionate.Nurturing<- ifelse(mydata$Peer_Compassionate.Nurturing == "1 - Not at all", 1, 
+                                      ifelse(mydata$Peer_Compassionate.Nurturing == "2 - Slightly", 2,
+                                             ifelse(mydata$Peer_Compassionate.Nurturing=="3 - Moderately",3,
+                                                    ifelse(mydata$Peer_Compassionate.Nurturing=="4 - Very",4,
+                                                           ifelse(mydata$Peer_Compassionate.Nurturing=="5 - Extremely",5,NA)))))
+#Content/Satisfied
+mydata$Peer_Content.Satisfied<- ifelse(mydata$Peer_Content.Satisfied == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Content.Satisfied == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Content.Satisfied=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Content.Satisfied=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Content.Satisfied=="5 - Extremely",5,NA)))))
+#Cooperative/Harmonious
+mydata$Peer_Cooperative.Harmonious<- ifelse(mydata$Peer_Cooperative.Harmonious == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Cooperative.Harmonious == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Cooperative.Harmonious=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Cooperative.Harmonious=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Cooperative.Harmonious=="5 - Extremely",5,NA)))))
+#Dissatisfied/Complaining
+mydata$Peer_Dissatisfied.Complaining<- ifelse(mydata$Peer_Dissatisfied.Complaining == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Dissatisfied.Complaining == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Dissatisfied.Complaining=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Dissatisfied.Complaining=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Dissatisfied.Complaining=="5 - Extremely",5,NA)))))
+#Distracted/Absent Minded
+mydata$Peer_Distracted.Absent.minded<- ifelse(mydata$Peer_Distracted.Absent.minded == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Distracted.Absent.minded == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Distracted.Absent.minded=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Distracted.Absent.minded=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Distracted.Absent.minded=="5 - Extremely",5,NA)))))
+#Forgiving/Generous
+mydata$Peer_Forgiving.Generous<- ifelse(mydata$Peer_Forgiving.Generous == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Forgiving.Generous == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Forgiving.Generous=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Forgiving.Generous=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Forgiving.Generous=="5 - Extremely",5,NA)))))
+#Grateful/Appreciative
+mydata$Peer_Grateful.Appreciative<- ifelse(mydata$Peer_Grateful.Appreciative == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Grateful.Appreciative == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Grateful.Appreciative=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Grateful.Appreciative=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Grateful.Appreciative=="5 - Extremely",5,NA)))))
+#Happy/Cheerful
+mydata$Peer_Happy.Cheerful<- ifelse(mydata$Peer_Happy.Cheerful == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Happy.Cheerful == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Happy.Cheerful=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Happy.Cheerful=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Happy.Cheerful=="5 - Extremely",5,NA)))))
+#Hostile/Argumentative
+mydata$Peer_Hostile.Argumentative<- ifelse(mydata$Peer_Hostile.Argumentative == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Hostile.Argumentative == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Hostile.Argumentative=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Hostile.Argumentative=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Hostile.Argumentative=="5 - Extremely",5,NA)))))
+#Irritable/Agitated
+mydata$Peer_Irritable.Agitated<- ifelse(mydata$Peer_Irritable.Agitated == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Irritable.Agitated == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Irritable.Agitated=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Irritable.Agitated=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Irritable.Agitated=="5 - Extremely",5,NA)))))
+#Kind/Friendly
+mydata$Peer_Kind.Friendly<- ifelse(mydata$Peer_Kind.Friendly == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Kind.Friendly == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Kind.Friendly=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Kind.Friendly=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Kind.Friendly=="5 - Extremely",5,NA)))))
+
+#Optimistic/Hopeful
+mydata$Peer_Optimistic.Hopeful<- ifelse(mydata$Peer_Optimistic.Hopeful == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Optimistic.Hopeful == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Optimistic.Hopeful=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Optimistic.Hopeful=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Optimistic.Hopeful=="5 - Extremely",5,NA)))))
+#Sad/Somber
+mydata$Peer_Sad.Somber<- ifelse(mydata$Peer_Sad.Somber == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Sad.Somber == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Sad.Somber=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Sad.Somber=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Sad.Somber=="5 - Extremely",5,NA)))))
+#Self critical/Hopeless
+mydata$Peer_Self.critical.Hopeless<- ifelse(mydata$Peer_Self.critical.Hopeless == "1 - Not at all", 1, 
+                                             ifelse(mydata$Peer_Self.critical.Hopeless == "2 - Slightly", 2,
+                                                    ifelse(mydata$Peer_Self.critical.Hopeless=="3 - Moderately",3,
+                                                           ifelse(mydata$Peer_Self.critical.Hopeless=="4 - Very",4,
+                                                                  ifelse(mydata$Peer_Self.critical.Hopeless=="5 - Extremely",5,NA)))))
+
+#Re-coding the Q "How would you rate the quality of your relationship with the person you nominated on the Pre-Course Survey?"
+mydata$Peer_Quality<- ifelse(mydata$Peer_Quality == "1 - Very poor", 1, 
+                                          ifelse(mydata$Peer_Quality == "2 - Poor", 2,
+                                                 ifelse(mydata$Peer_Quality=="3 - Fair",3,
+                                                        ifelse(mydata$Peer_Quality=="4 - Good",4,
+                                                               ifelse(mydata$Peer_Quality=="5 - Very Good",5,
+                                                                      ifelse(mydata$Peer_Quality=="6 - Excellent",6,
+                                                                             ifelse(mydata$Peer_Quality=="7 - Exceptional",7,NA)))))))
+
+#Re-coding the Q "I lead a purposeful and meaningful life."
+mydata$PURPOSE_1<- ifelse(mydata$PURPOSE_1 == "Strongly Disagree", 1, 
+                                          ifelse(mydata$PURPOSE_1 == "Disagree", 2,
+                                                 ifelse(mydata$PURPOSE_1=="Slightly Disagree",3,
+                                                        ifelse(mydata$PURPOSE_1=="Mixed/ Neither",4,
+                                                               ifelse(mydata$PURPOSE_1=="Slightly Agree",5,
+                                                                      ifelse(mydata$PURPOSE_1=="Agree",6,
+                                                                             ifelse(mydata$PURPOSE_1=="Strongly Agree",7,NA)))))))
+#Re-coding the Q "I lead a purposeful and meaningful life."
+mydata$PURPOSE_2<- ifelse(mydata$PURPOSE_2 == "Strongly Disagree", 1, 
+                                          ifelse(mydata$PURPOSE_2 == "Disagree", 2,
+                                                 ifelse(mydata$PURPOSE_2=="Slightly Disagree",3,
+                                                        ifelse(mydata$PURPOSE_2=="Mixed/ Neither",4,
+                                                               ifelse(mydata$PURPOSE_2=="Slightly Agree",5,
+                                                                      ifelse(mydata$PURPOSE_2=="Agree",6,
+                                                                             ifelse(mydata$PURPOSE_2=="Strongly Agree",7,NA)))))))
+
+#Re-coding the Q "I am engaged and interested in my daily activities."
+mydata$PURPOSE_3<- ifelse(mydata$PURPOSE_3 == "Strongly Disagree", 1, 
+                                          ifelse(mydata$PURPOSE_3 == "Disagree", 2,
+                                                 ifelse(mydata$PURPOSE_3=="Slightly Disagree",3,
+                                                        ifelse(mydata$PURPOSE_3=="Mixed/ Neither",4,
+                                                               ifelse(mydata$PURPOSE_3=="Slightly Agree",5,
+                                                                      ifelse(mydata$PURPOSE_3=="Agree",6,
+                                                                             ifelse(mydata$PURPOSE_3=="Strongly Agree",7,NA)))))))
+
+#Re-coding the Q "I actively contribute to the happiness and well-being of others."
+mydata$PURPOSE_4<- ifelse(mydata$PURPOSE_4 == "Strongly Disagree", 1, 
+                                          ifelse(mydata$PURPOSE_4 == "Disagree", 2,
+                                                 ifelse(mydata$PURPOSE_4=="Slightly Disagree",3,
+                                                        ifelse(mydata$PURPOSE_4=="Mixed/ Neither",4,
+                                                               ifelse(mydata$PURPOSE_4=="Slightly Agree",5,
+                                                                      ifelse(mydata$PURPOSE_4=="Agree",6,
+                                                                             ifelse(mydata$PURPOSE_4=="Strongly Agree",7,NA)))))))
+
+#Re-coding the Q "I am competent and capable in the activities that are important to me."
+mydata$PURPOSE_5<- ifelse(mydata$PURPOSE_5 == "Strongly Disagree", 1, 
+                                          ifelse(mydata$PURPOSE_5 == "Disagree", 2,
+                                                 ifelse(mydata$PURPOSE_5=="Slightly Disagree",3,
+                                                        ifelse(mydata$PURPOSE_5=="Mixed/ Neither",4,
+                                                               ifelse(mydata$PURPOSE_5=="Slightly Agree",5,
+                                                                      ifelse(mydata$PURPOSE_5=="Agree",6,
+                                                                             ifelse(mydata$PURPOSE_5=="Strongly Agree",7,NA)))))))
+
+#Re-coding the Q "I am a good person and live a good life."
+mydata$PURPOSE_6<- ifelse(mydata$PURPOSE_6 == "Strongly Disagree", 1, 
+                                          ifelse(mydata$PURPOSE_6 == "Disagree", 2,
+                                                 ifelse(mydata$PURPOSE_6=="Slightly Disagree",3,
+                                                        ifelse(mydata$PURPOSE_6=="Mixed/ Neither",4,
+                                                               ifelse(mydata$PURPOSE_6=="Slightly Agree",5,
+                                                                      ifelse(mydata$PURPOSE_6=="Agree",6,
+                                                                             ifelse(mydata$PURPOSE_6=="Strongly Agree",7,NA)))))))
+
+#Re-coding the Q "I am optimistic about my future."
+mydata$PURPOSE_7<- ifelse(mydata$PURPOSE_7 == "Strongly Disagree", 1, 
+                                          ifelse(mydata$PURPOSE_7 == "Disagree", 2,
+                                                 ifelse(mydata$PURPOSE_7=="Slightly Disagree",3,
+                                                        ifelse(mydata$PURPOSE_7=="Mixed/ Neither",4,
+                                                               ifelse(mydata$PURPOSE_7=="Slightly Agree",5,
+                                                                      ifelse(mydata$PURPOSE_7=="Agree",6,
+                                                                             ifelse(mydata$PURPOSE_7=="Strongly Agree",7,NA)))))))
+
+#Re-coding the Q "People respect me."
+mydata$PURPOSE_8<- ifelse(mydata$PURPOSE_8 == "Strongly Disagree", 1, 
+                                          ifelse(mydata$PURPOSE_8 == "Disagree", 2,
+                                                 ifelse(mydata$PURPOSE_8=="Slightly Disagree",3,
+                                                        ifelse(mydata$PURPOSE_8=="Mixed/ Neither",4,
+                                                               ifelse(mydata$PURPOSE_8=="Slightly Agree",5,
+                                                                      ifelse(mydata$PURPOSE_8=="Agree",6,
+                                                                             ifelse(mydata$PURPOSE_8=="Strongly Agree",7,NA)))))))
+
+#Re-coding the Qs "How would you rate each of the following components of GG101x: The Science of Happiness?"
+#Weekly Happiness Check-ins
+mydata$Rate_Check_ins<- ifelse(mydata$Rate_Check_ins == "Terrible", 1, 
+                                             ifelse(mydata$Rate_Check_ins == "Poor", 2,
+                                                    ifelse(mydata$Rate_Check_ins=="Satisfactory",3,
+                                                           ifelse(mydata$Rate_Check_ins=="Good",4,
+                                                                  ifelse(mydata$Rate_Check_ins=="Terrific",5,NA)))))
+#Discussion Forums
+mydata$Rate_Discussions<- ifelse(mydata$Rate_Discussions == "Terrible", 1, 
+                               ifelse(mydata$Rate_Discussions == "Poor", 2,
+                                      ifelse(mydata$Rate_Discussions=="Satisfactory",3,
+                                             ifelse(mydata$Rate_Discussions=="Good",4,
+                                                    ifelse(mydata$Rate_Discussions=="Terrific",5,NA)))))
+#Videos by Dacher Keltner
+mydata$Rate_DK<- ifelse(mydata$Rate_DK == "Terrible", 1, 
+                               ifelse(mydata$Rate_DK == "Poor", 2,
+                                      ifelse(mydata$Rate_DK=="Satisfactory",3,
+                                             ifelse(mydata$Rate_DK=="Good",4,
+                                                    ifelse(mydata$Rate_DK=="Terrific",5,NA)))))
+#Videos by Emiliana Simon-Thomas
+mydata$Rate_EMST<- ifelse(mydata$Rate_EMST == "Terrible", 1, 
+                               ifelse(mydata$Rate_EMST == "Poor", 2,
+                                      ifelse(mydata$Rate_EMST=="Satisfactory",3,
+                                             ifelse(mydata$Rate_EMST=="Good",4,
+                                                    ifelse(mydata$Rate_EMST=="Terrific",5,NA)))))
+#Exams
+mydata$Rate_Exams<- ifelse(mydata$Rate_Exams == "Terrible", 1, 
+                               ifelse(mydata$Rate_Exams == "Poor", 2,
+                                      ifelse(mydata$Rate_Exams=="Satisfactory",3,
+                                             ifelse(mydata$Rate_Exams=="Good",4,
+                                                    ifelse(mydata$Rate_Exams=="Terrific",5,NA)))))
+#Guest Videos
+mydata$Rate_Guests<- ifelse(mydata$Rate_Guests == "Terrible", 1, 
+                               ifelse(mydata$Rate_Guests == "Poor", 2,
+                                      ifelse(mydata$Rate_Guests=="Satisfactory",3,
+                                             ifelse(mydata$Rate_Guests=="Good",4,
+                                                    ifelse(mydata$Rate_Guests=="Terrific",5,NA)))))
+#Happiness Practices
+mydata$Rate_Happiness_Practices<- ifelse(mydata$Rate_Happiness_Practices == "Terrible", 1, 
+                               ifelse(mydata$Rate_Happiness_Practices == "Poor", 2,
+                                      ifelse(mydata$Rate_Happiness_Practices=="Satisfactory",3,
+                                             ifelse(mydata$Rate_Happiness_Practices=="Good",4,
+                                                    ifelse(mydata$Rate_Happiness_Practices=="Terrific",5,NA)))))
+#Live Q&A's
+mydata$Rate_LIVE_Q.A<- ifelse(mydata$Rate_LIVE_Q.A == "Terrible", 1, 
+                               ifelse(mydata$Rate_LIVE_Q.A == "Poor", 2,
+                                      ifelse(mydata$Rate_LIVE_Q.A=="Satisfactory",3,
+                                             ifelse(mydata$Rate_LIVE_Q.A=="Good",4,
+                                                    ifelse(mydata$Rate_LIVE_Q.A=="Terrific",5,NA)))))
+#Weekly Problem Sets
+mydata$Rate_Problem_Sets<- ifelse(mydata$Rate_Problem_Sets == "Terrible", 1, 
+                               ifelse(mydata$Rate_Problem_Sets == "Poor", 2,
+                                      ifelse(mydata$Rate_Problem_Sets=="Satisfactory",3,
+                                             ifelse(mydata$Rate_Problem_Sets=="Good",4,
+                                                    ifelse(mydata$Rate_Problem_Sets=="Terrific",5,NA)))))
+#Weekly Readings
+mydata$Rate_Readings<- ifelse(mydata$Rate_Readings == "Terrible", 1, 
+                               ifelse(mydata$Rate_Readings == "Poor", 2,
+                                      ifelse(mydata$Rate_Readings=="Satisfactory",3,
+                                             ifelse(mydata$Rate_Readings=="Good",4,
+                                                    ifelse(mydata$Rate_Readings=="Terrific",5,NA)))))
+
+#Re-coding the Q "In general, I consider myself:"
+mydata$SHS_1<- ifelse(mydata$SHS_1 == "Not a very happy person (1)", 1, 
+                                          ifelse(mydata$SHS_1 == "(2)", 2,
+                                                 ifelse(mydata$SHS_1=="(3)",3,
+                                                        ifelse(mydata$SHS_1=="(4)",4,
+                                                               ifelse(mydata$SHS_1=="(5)",5,
+                                                                      ifelse(mydata$SHS_1=="(6)",6,
+                                                                             ifelse(mydata$SHS_1=="A very happy person (7)",7,NA)))))))
+
+#Re-coding the Q "Compared to most of my peers, I consider myself:"
+mydata$SHS_2<- ifelse(mydata$SHS_2 == "Less happy (1)", 1, 
+                                          ifelse(mydata$SHS_2 == "(2)", 2,
+                                                 ifelse(mydata$SHS_2=="(3)",3,
+                                                        ifelse(mydata$SHS_2=="(4)",4,
+                                                               ifelse(mydata$SHS_2=="(5)",5,
+                                                                      ifelse(mydata$SHS_2=="(6)",6,
+                                                                             ifelse(mydata$SHS_2=="More happy (7)",7,NA)))))))
+
+#Re-coding the Q "Some people are generally very happy. They enjoy life regardless of what is going on, getting the most out of everything. To what extent does this characterization describe you?"
+mydata$SHS_3<- ifelse(mydata$SHS_3 == "Not at all (1)", 1, 
+                                          ifelse(mydata$SHS_3 == "(2)", 2,
+                                                 ifelse(mydata$SHS_3=="(3)",3,
+                                                        ifelse(mydata$SHS_3=="(4)",4,
+                                                               ifelse(mydata$SHS_3=="(5)",5,
+                                                                      ifelse(mydata$SHS_3=="(6)",6,
+                                                                             ifelse(mydata$SHS_3=="A great deal (7)",7,NA)))))))
+
+#Re-coding the Q "Some people are generally not very happy. Although they are not depressed, they never seem as happy as they might be. To what extent does this characterization describe you? "
+mydata$SHS_4R<- ifelse(mydata$SHS_4R == "Not at all (1)", 1, 
+                                          ifelse(mydata$SHS_4R == "(2)", 2,
+                                                 ifelse(mydata$SHS_4R=="(3)",3,
+                                                        ifelse(mydata$SHS_4R=="(4)",4,
+                                                               ifelse(mydata$SHS_4R=="(5)",5,
+                                                                      ifelse(mydata$SHS_4R=="(6)",6,
+                                                                             ifelse(mydata$SHS_4R=="A great deal (7)",7,NA)))))))
+
+#Re-coding the Q "In the last month, how often have you felt that you were unable to control the important things in your life?"
+mydata$STRESS_1<- ifelse(mydata$STRESS_1 == "Never", 1, 
+                               ifelse(mydata$STRESS_1 == "Almost Never", 2,
+                                      ifelse(mydata$STRESS_1=="Sometimes",3,
+                                             ifelse(mydata$STRESS_1=="Fairly Often",4,
+                                                    ifelse(mydata$STRESS_1=="Very Often",5,NA)))))
+
+#Re-coding the Q "In the last month, how often have you felt confident about your ability to handle your personal problems?"
+mydata$STRESS_2R<- ifelse(mydata$STRESS_2R == "Never", 1, 
+                               ifelse(mydata$STRESS_2R == "Almost Never", 2,
+                                      ifelse(mydata$STRESS_2R=="Sometimes",3,
+                                             ifelse(mydata$STRESS_2R=="Fairly Often",4,
+                                                    ifelse(mydata$STRESS_2R=="Very Often",5,NA)))))
+
+#Re-coding the Q "In the last month, how often have you felt that things were going your way?"
+mydata$STRESS_3R<- ifelse(mydata$STRESS_3R == "Never", 1, 
+                               ifelse(mydata$STRESS_3R == "Almost Never", 2,
+                                      ifelse(mydata$STRESS_3R=="Sometimes",3,
+                                             ifelse(mydata$STRESS_3R=="Fairly Often",4,
+                                                    ifelse(mydata$STRESS_3R=="Very Often",5,NA)))))
+#Re-coding the Q "In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?"
+mydata$STRESS_4<- ifelse(mydata$STRESS_4 == "Never", 1, 
+                               ifelse(mydata$STRESS_4 == "Almost Never", 2,
+                                      ifelse(mydata$STRESS_4=="Sometimes",3,
+                                             ifelse(mydata$STRESS_4=="Fairly Often",4,
+                                                    ifelse(mydata$STRESS_4=="Very Often",5,NA)))))
+
+#Re-coding the Q's "How valuable did you find each of the following weekly topics from GG101x: The Science of Happiness?"
+#Week 1: Intro
+mydata$Value_Week1<- ifelse(mydata$Value_Week1 == "Not at all", 1, 
+                               ifelse(mydata$Value_Week1 == "Slightly", 2,
+                                      ifelse(mydata$Value_Week1=="Moderately",3,
+                                             ifelse(mydata$Value_Week1=="Very",4,
+                                                    ifelse(mydata$Value_Week1=="Extremely",5,NA)))))
+#Week 2: Power of Social Connection
+mydata$Value_Week2<- ifelse(mydata$Value_Week2 == "Not at all", 1, 
+                               ifelse(mydata$Value_Week2 == "Slightly", 2,
+                                      ifelse(mydata$Value_Week2=="Moderately",3,
+                                             ifelse(mydata$Value_Week2=="Very",4,
+                                                    ifelse(mydata$Value_Week2=="Extremely",5,NA)))))
+#Week 3: Kindness & Compassion
+mydata$Value_Week3<- ifelse(mydata$Value_Week3 == "Not at all", 1, 
+                               ifelse(mydata$Value_Week3 == "Slightly", 2,
+                                      ifelse(mydata$Value_Week3=="Moderately",3,
+                                             ifelse(mydata$Value_Week3=="Very",4,
+                                                    ifelse(mydata$Value_Week3=="Extremely",5,NA)))))
+#Week 4: Cooperation & Reconciliation
+mydata$Value_Week4<- ifelse(mydata$Value_Week4 == "Not at all", 1, 
+                               ifelse(mydata$Value_Week4 == "Slightly", 2,
+                                      ifelse(mydata$Value_Week4=="Moderately",3,
+                                             ifelse(mydata$Value_Week4=="Very",4,
+                                                    ifelse(mydata$Value_Week4=="Extremely",5,NA)))))
+#Week 6: Mindfulness
+mydata$Value_Week6<- ifelse(mydata$Value_Week6 == "Not at all", 1, 
+                               ifelse(mydata$Value_Week6 == "Slightly", 2,
+                                      ifelse(mydata$Value_Week6=="Moderately",3,
+                                             ifelse(mydata$Value_Week6=="Very",4,
+                                                    ifelse(mydata$Value_Week6=="Extremely",5,NA)))))
+#Week 7: Mental Habits of Happiness
+mydata$Value_Week7<- ifelse(mydata$Value_Week7 == "Not at all", 1, 
+                               ifelse(mydata$Value_Week7 == "Slightly", 2,
+                                      ifelse(mydata$Value_Week7=="Moderately",3,
+                                             ifelse(mydata$Value_Week7=="Very",4,
+                                                    ifelse(mydata$Value_Week7=="Extremely",5,NA)))))
+#Week 8: Gratitude
+mydata$Value_Week8<- ifelse(mydata$Value_Week8 == "Not at all", 1, 
+                               ifelse(mydata$Value_Week8 == "Slightly", 2,
+                                      ifelse(mydata$Value_Week8=="Moderately",3,
+                                             ifelse(mydata$Value_Week8=="Very",4,
+                                                    ifelse(mydata$Value_Week8=="Extremely",5,NA)))))
+#Week 9: Finding Your Happiness Fit & New Frontiers
+mydata$Value_Week9<- ifelse(mydata$Value_Week9 == "Not at all", 1, 
+                               ifelse(mydata$Value_Week9 == "Slightly", 2,
+                                      ifelse(mydata$Value_Week9=="Moderately",3,
+                                             ifelse(mydata$Value_Week9=="Very",4,
+                                                    ifelse(mydata$Value_Week9=="Extremely",5,NA)))))
+#Re-coding Q "On average, how much time did each week of GG101x: The Science of Happiness take you?"
+mydata$Weekly_Hours<- ifelse(mydata$Weekly_Hours == "less than one hour", 1, 
+                            ifelse(mydata$Weekly_Hours == "1 hour", 2,
+                                   ifelse(mydata$Weekly_Hours=="2 hours",3,
+                                          ifelse(mydata$Weekly_Hours=="3 hours",4,
+                                                 ifelse(mydata$Weekly_Hours=="4 hours",5,
+                                                        ifelse(mydata$Weekly_Hours=="5 hours",6,
+                                                               ifelse(mydata$Weekly_Hours=="6 hours",7,
+                                                                      ifelse(mydata$Weekly_Hours=="7 hours", 8,
+                                                                             ifelse(mydata$Weekly_Hours=="More than 7 hours (please specify)",9,NA)))))))))
+```
+
+Next I will score several scales.
+
+Scoring Subjective Happiness Scale
+```{r eval=TRUE}
+SHS.key <- c(1,1,1,-1) #Creating my key. -1 indicated a reverse scored item
+SHS.names <- c("SHS_1" ,"SHS_2" ,"SHS_3"  ,"SHS_4R") 
+(results.SHS<- scoreItems(keys = SHS.key, items = mydata[SHS.names], 
+                          totals = FALSE,impute="none", missing = T, min = 1, 
+                          max = 7)) #alpha of .85 is great
+
+mydata$SHS <- scoreItems(keys = SHS.key, items = mydata[SHS.names], 
+                               totals = FALSE,impute="none", missing = TRUE, min = 1, 
+                               max = 7)$score #creating a variable in my dataset with the score of subjective happiness
+```
+
+Scoring Sense of Purpose Scale
+```{r eval=TRUE}
+PURPOSE.key <- c(1,1,1,1,1,1,1,1) #Creating my key. No Reversed items
+PURPOSE.names <- c("PURPOSE_1" ,"PURPOSE_2" ,"PURPOSE_3"  ,"PURPOSE_4","PURPOSE_5","PURPOSE_6","PURPOSE_7","PURPOSE_8") 
+(results.PURPOSE<- scoreItems(keys = PURPOSE.key, items = mydata[PURPOSE.names], 
+                          totals = FALSE,impute="none", missing = T, min = 1, 
+                          max = 7)) #alpha of .91 is great
+
+mydata$PURPOSE <- scoreItems(keys = PURPOSE.key, items = mydata[PURPOSE.names], 
+                               totals = FALSE,impute="none", missing = TRUE, min = 1, 
+                               max = 7)$score #creating a variable in my dataset with the score of sense of purpose
+```
+
+Scoring Stress Scale
+```{r eval=TRUE}
+STRESS.key <- c(1,-1,-1,1) #Creating my key. 2 & 3 are reverse scored
+STRESS.names <- c("STRESS_1" ,"STRESS_2R" ,"STRESS_3R"  ,"STRESS_4") 
+(results.STRESS<- scoreItems(keys = STRESS.key, items = mydata[STRESS.names], 
+                          totals = FALSE,impute="none", missing = T, min = 1, 
+                          max = 5)) #alpha of .76 is okay
+
+mydata$STRESS <- scoreItems(keys = STRESS.key, items = mydata[STRESS.names], 
+                               totals = FALSE,impute="none", missing = TRUE, min = 1, 
+                               max = 5)$score #creating a variable in my dataset with the score of stress
+```
+
+Scoring Loneliness Scale
+```{r eval=TRUE}
+LONELY.key <- c(-1,1,-1,1) #Creating my key. 1 & 3 are reverse scored
+LONELY.names <- c("LONELY_1R" ,"LONELY_2" ,"LONELY_3R"  ,"LONELY_4") 
+(results.LONELY<- scoreItems(keys = LONELY.key, items = mydata[LONELY.names], 
+                          totals = FALSE,impute="none", missing = T, min = 1, 
+                          max = 4)) #alpha of .74 is okay
+
+mydata$LONELY <- scoreItems(keys = LONELY.key, items = mydata[LONELY.names], 
+                               totals = FALSE,impute="none", missing = TRUE, min = 1, 
+                               max = 4)$score #creating a variable in my dataset with the score of loneliness
+```
+
+
+The data is now cleaned & ready for Analysis.
+I will save it to my Data folder (the current working directory)
+```{r eval=TRUE}
+View(mydata)
+write.csv(mydata,"Dataset_For_Quantitative_Analysis.csv")
+```
+
